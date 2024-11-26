@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
-from model import JointDeBERTa
+from model.modeling_jointdeberta import load_model
 from utils import init_logger, load_tokenizer, get_intent_labels, get_slot_labels
 
 logger = logging.getLogger(__name__)
@@ -19,25 +19,6 @@ def get_device(pred_config):
 
 def get_args(pred_config):
     return torch.load(os.path.join(pred_config.model_dir, 'training_args.bin'))
-
-
-def load_model(pred_config, args, device):
-    # Check whether model exists
-    if not os.path.exists(pred_config.model_dir):
-        raise Exception("Model doesn't exists! Train first!")
-
-    try:
-        model = JointDeBERTa.from_pretrained(args.model_dir,
-                                             args=args,
-                                             intent_label_lst=get_intent_labels(args),
-                                             slot_label_lst=get_slot_labels(args))
-        model.to(device)
-        model.eval()
-        logger.info("***** Model Loaded *****")
-    except:
-        raise Exception("Some model files might be missing...")
-
-    return model
 
 
 def read_input_file(pred_config):
@@ -129,7 +110,7 @@ def predict(pred_config):
     # load model and args
     args = get_args(pred_config)
     device = get_device(pred_config)
-    model = load_model(pred_config, args, device)
+    model = load_model(args.model_dir, args, device)
     logger.info(args)
 
     intent_label_lst = get_intent_labels(args)

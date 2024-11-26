@@ -9,7 +9,7 @@ from seqeval.metrics import precision_score, recall_score, f1_score
 from transformers import AutoTokenizer
 
 MODEL_PATH = 'microsoft/mdeberta-v3-base'
-
+logger = logging.getLogger(__name__)
 
 def get_intent_labels(args):
     return [label.strip() for label in open(os.path.join(args.data_dir, args.task, args.intent_label_file), 'r', encoding='utf-8')]

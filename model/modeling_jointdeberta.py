@@ -1,10 +1,14 @@
+import logging
+import os
+
 import torch.nn as nn
 from torchcrf import CRF
 from transformers import DebertaV2Model, DebertaV2PreTrainedModel
 
-from utils import MODEL_PATH
+from utils import MODEL_PATH, get_intent_labels, get_slot_labels
 from .module import IntentClassifier, SlotClassifier
 
+logger = logging.getLogger(__name__)
 
 class JointDeBERTa(DebertaV2PreTrainedModel):
     def __init__(self, config, args, intent_label_lst, slot_label_lst):
@@ -62,3 +66,26 @@ class JointDeBERTa(DebertaV2PreTrainedModel):
         outputs = (total_loss,) + outputs
 
         return outputs  # (loss), logits, (hidden_states), (attentions) # Logits is a tuple of intent and slot logits
+
+
+def load_model(model_dir, args, device, intent_labels=None, slot_labels=None):
+    # Check whether model exists
+    if not os.path.exists(model_dir):
+        raise Exception("Model doesn't exist! Train first!")
+
+    try:
+        if intent_labels is None:
+            intent_labels = get_intent_labels(args)
+        if slot_labels is None:
+            slot_labels = get_slot_labels(args)
+        model = JointDeBERTa.from_pretrained(model_dir,
+                                             args=args,
+                                             intent_label_lst=intent_labels,
+                                             slot_label_lst=slot_labels)
+        model.to(device)
+        model.eval()
+        logger.info("***** Model Loaded *****")
+    except:
+        raise Exception("Some model files might be missing...")
+
+    return model
