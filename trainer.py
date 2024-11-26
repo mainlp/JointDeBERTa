@@ -25,7 +25,7 @@ class Trainer(object):
         # Use cross entropy ignore index as padding label id so that only real label ids contribute to the loss later
         self.pad_token_label_id = args.ignore_index
 
-        self.config_class, self.model_class, _ = MODEL_CLASSES[args.model_type]
+        self.config_class, self.model_class = MODEL_CLASSES[args.model_type]
         self.config = self.config_class.from_pretrained(args.model_name_or_path, finetuning_task=args.task)
         self.model = self.model_class.from_pretrained(args.model_name_or_path,
                                                       config=self.config,
@@ -60,9 +60,9 @@ class Trainer(object):
         # Train!
         logger.info("***** Running training *****")
         logger.info("  Num examples = %d", len(self.train_dataset))
-        logger.info("  Num Epochs = %d", self.args.num_train_epochs)
+        logger.info("  Num epochs = %d", self.args.num_train_epochs)
         logger.info("  Total train batch size = %d", self.args.train_batch_size)
-        logger.info("  Gradient Accumulation steps = %d", self.args.gradient_accumulation_steps)
+        logger.info("  Gradient accumulation steps = %d", self.args.gradient_accumulation_steps)
         logger.info("  Total optimization steps = %d", t_total)
         logger.info("  Logging steps = %d", self.args.logging_steps)
         logger.info("  Save steps = %d", self.args.save_steps)

@@ -116,12 +116,6 @@ class JointProcessor(object):
                                      set_type=mode)
 
 
-processors = {
-    "atis": JointProcessor,
-    "snips": JointProcessor
-}
-
-
 def convert_examples_to_features(examples, max_seq_len, tokenizer,
                                  pad_token_label_id=-100,
                                  cls_token_segment_id=0,
@@ -208,7 +202,7 @@ def convert_examples_to_features(examples, max_seq_len, tokenizer,
 
 
 def load_and_cache_examples(args, tokenizer, mode):
-    processor = processors[args.task](args)
+    processor = JointProcessor(args)
 
     # Load data features from cache or dataset file
     cached_features_file = os.path.join(

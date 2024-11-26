@@ -1,7 +1,7 @@
 import argparse
 
 from trainer import Trainer
-from utils import init_logger, load_tokenizer, read_prediction_text, set_seed, MODEL_CLASSES, MODEL_PATH_MAP
+from utils import init_logger, load_tokenizer, set_seed, MODEL_CLASSES, MODEL_PATH_MAP
 from data_loader import load_and_cache_examples
 
 

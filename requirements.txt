@@ -1,5 +1,5 @@
-torch
-transformers
-seqeval
-pytorch-crf
-sentencepiece
+torch~=2.5.1
+transformers~=4.46.3
+seqeval~=1.2.2
+numpy~=2.1.3
+tqdm~=4.67.1

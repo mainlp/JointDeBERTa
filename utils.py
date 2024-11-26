@@ -6,21 +6,22 @@ import torch
 import numpy as np
 from seqeval.metrics import precision_score, recall_score, f1_score
 
-from transformers import BertConfig, DistilBertConfig, AlbertConfig
-from transformers import BertTokenizer, DistilBertTokenizer, AlbertTokenizer
+from transformers import BertConfig, DistilBertConfig, AlbertConfig, DebertaV2Config, AutoTokenizer
 
-from model import JointBERT, JointDistilBERT, JointAlbert
+from model import JointBERT, JointDistilBERT, JointAlbert, JointDeBERTa
 
 MODEL_CLASSES = {
-    'bert': (BertConfig, JointBERT, BertTokenizer),
-    'distilbert': (DistilBertConfig, JointDistilBERT, DistilBertTokenizer),
-    'albert': (AlbertConfig, JointAlbert, AlbertTokenizer)
+    'bert': (BertConfig, JointBERT),
+    'distilbert': (DistilBertConfig, JointDistilBERT),
+    'albert': (AlbertConfig, JointAlbert),
+    'mdeberta': (DebertaV2Config, JointDeBERTa)
 }
 
 MODEL_PATH_MAP = {
     'bert': 'bert-base-uncased',
     'distilbert': 'distilbert-base-uncased',
-    'albert': 'albert-xxlarge-v1'
+    'albert': 'albert-xxlarge-v1',
+    'mdeberta': 'microsoft/mdeberta-v3-base'
 }
 
 
@@ -33,7 +34,7 @@ def get_slot_labels(args):
 
 
 def load_tokenizer(args):
-    return MODEL_CLASSES[args.model_type][2].from_pretrained(args.model_name_or_path)
+    return AutoTokenizer.from_pretrained(args.model_name_or_path)
 
 
 def init_logger():
@@ -89,7 +90,7 @@ def get_sentence_frame_acc(intent_preds, intent_labels, slot_preds, slot_labels)
     # Get the intent comparison result
     intent_result = (intent_preds == intent_labels)
 
-    # Get the slot comparision result
+    # Get the slot comparison result
     slot_result = []
     for preds, labels in zip(slot_preds, slot_labels):
         assert len(preds) == len(labels)
@@ -101,7 +102,7 @@ def get_sentence_frame_acc(intent_preds, intent_labels, slot_preds, slot_labels)
         slot_result.append(one_sent_result)
     slot_result = np.array(slot_result)
 
-    sementic_acc = np.multiply(intent_result, slot_result).mean()
+    semantic_acc = np.multiply(intent_result, slot_result).mean()
     return {
-        "sementic_frame_acc": sementic_acc
+        "semqntic_frame_acc": semantic_acc
     }
