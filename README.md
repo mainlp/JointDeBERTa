@@ -1,6 +1,7 @@
 # JointBERT
-
-(Unofficial) Pytorch implementation of `JointBERT`: [BERT for Joint Intent Classification and Slot Filling](https://arxiv.org/abs/1902.10909)
+Fork of <br> 
+(Unofficial) Pytorch implementation of `JointBERT`: [BERT for Joint Intent Classification and Slot Filling](https://arxiv.org/abs/1902.10909)<br> 
+adapted for mDeBERTa and updated to Pytorch 2.
 
 ## Model Architecture
 
@@ -14,11 +15,11 @@
 
 ## Dependencies
 
-- python>=3.6
-- torch==1.6.0
-- transformers==3.0.2
-- seqeval==0.0.12
-- pytorch-crf==0.7.2
+- python
+- torch
+- transformers
+- seqeval
+- pytorch-crf
 
 ## Dataset
 
