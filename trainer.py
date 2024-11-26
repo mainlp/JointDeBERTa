@@ -6,9 +6,10 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.optim import AdamW
-from transformers import get_linear_schedule_with_warmup
+from transformers import get_linear_schedule_with_warmup, AutoConfig
 
-from utils import MODEL_CLASSES, compute_metrics, get_intent_labels, get_slot_labels
+from model import JointDeBERTa
+from utils import compute_metrics, get_intent_labels, get_slot_labels, MODEL_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +26,11 @@ class Trainer(object):
         # Use cross entropy ignore index as padding label id so that only real label ids contribute to the loss later
         self.pad_token_label_id = args.ignore_index
 
-        self.config_class, self.model_class = MODEL_CLASSES[args.model_type]
-        self.config = self.config_class.from_pretrained(args.model_name_or_path, finetuning_task=args.task)
-        self.model = self.model_class.from_pretrained(args.model_name_or_path,
-                                                      config=self.config,
-                                                      args=args,
-                                                      intent_label_lst=self.intent_label_lst,
-                                                      slot_label_lst=self.slot_label_lst)
+        self.config = AutoConfig.from_pretrained(MODEL_PATH, finetuning_task=args.task)
+        self.model = JointDeBERTa(config=self.config,
+                                  args=args,
+                                  intent_label_lst=self.intent_label_lst,
+                                  slot_label_lst=self.slot_label_lst)
 
         # GPU or CPU
         self.device = "cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu"
@@ -79,12 +78,8 @@ class Trainer(object):
                 self.model.train()
                 batch = tuple(t.to(self.device) for t in batch)  # GPU or CPU
 
-                inputs = {'input_ids': batch[0],
-                          'attention_mask': batch[1],
-                          'intent_label_ids': batch[3],
-                          'slot_labels_ids': batch[4]}
-                if self.args.model_type != 'distilbert':
-                    inputs['token_type_ids'] = batch[2]
+                inputs = {'input_ids': batch[0], 'attention_mask': batch[1], 'intent_label_ids': batch[3],
+                          'slot_labels_ids': batch[4], 'token_type_ids': batch[2]}
                 outputs = self.model(**inputs)
                 loss = outputs[0]
 
@@ -145,12 +140,8 @@ class Trainer(object):
         for batch in tqdm(eval_dataloader, desc="Evaluating"):
             batch = tuple(t.to(self.device) for t in batch)
             with torch.no_grad():
-                inputs = {'input_ids': batch[0],
-                          'attention_mask': batch[1],
-                          'intent_label_ids': batch[3],
-                          'slot_labels_ids': batch[4]}
-                if self.args.model_type != 'distilbert':
-                    inputs['token_type_ids'] = batch[2]
+                inputs = {'input_ids': batch[0], 'attention_mask': batch[1], 'intent_label_ids': batch[3],
+                          'slot_labels_ids': batch[4], 'token_type_ids': batch[2]}
                 outputs = self.model(**inputs)
                 tmp_eval_loss, (intent_logits, slot_logits) = outputs[:2]
 
@@ -230,7 +221,7 @@ class Trainer(object):
             raise Exception("Model doesn't exists! Train first!")
 
         try:
-            self.model = self.model_class.from_pretrained(self.args.model_dir,
+            self.model = JointDeBERTa.from_pretrained(self.args.model_dir,
                                                           args=self.args,
                                                           intent_label_lst=self.intent_label_lst,
                                                           slot_label_lst=self.slot_label_lst)

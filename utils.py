@@ -6,23 +6,9 @@ import torch
 import numpy as np
 from seqeval.metrics import precision_score, recall_score, f1_score
 
-from transformers import BertConfig, DistilBertConfig, AlbertConfig, DebertaV2Config, AutoTokenizer
+from transformers import AutoTokenizer
 
-from model import JointBERT, JointDistilBERT, JointAlbert, JointDeBERTa
-
-MODEL_CLASSES = {
-    'bert': (BertConfig, JointBERT),
-    'distilbert': (DistilBertConfig, JointDistilBERT),
-    'albert': (AlbertConfig, JointAlbert),
-    'mdeberta': (DebertaV2Config, JointDeBERTa)
-}
-
-MODEL_PATH_MAP = {
-    'bert': 'bert-base-uncased',
-    'distilbert': 'distilbert-base-uncased',
-    'albert': 'albert-xxlarge-v1',
-    'mdeberta': 'microsoft/mdeberta-v3-base'
-}
+MODEL_PATH = 'microsoft/mdeberta-v3-base'
 
 
 def get_intent_labels(args):
@@ -34,7 +20,7 @@ def get_slot_labels(args):
 
 
 def load_tokenizer(args):
-    return AutoTokenizer.from_pretrained(args.model_name_or_path)
+    return AutoTokenizer.from_pretrained(MODEL_PATH)
 
 
 def init_logger():
@@ -104,5 +90,5 @@ def get_sentence_frame_acc(intent_preds, intent_labels, slot_preds, slot_labels)
 
     semantic_acc = np.multiply(intent_result, slot_result).mean()
     return {
-        "semqntic_frame_acc": semantic_acc
+        "semantic_frame_acc": semantic_acc
     }

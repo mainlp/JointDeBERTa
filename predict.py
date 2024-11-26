@@ -1,13 +1,14 @@
 import os
 import logging
 import argparse
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
-from utils import init_logger, load_tokenizer, get_intent_labels, get_slot_labels, MODEL_CLASSES
+from model import JointDeBERTa
+from utils import init_logger, load_tokenizer, get_intent_labels, get_slot_labels
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,10 @@ def load_model(pred_config, args, device):
         raise Exception("Model doesn't exists! Train first!")
 
     try:
-        model = MODEL_CLASSES[args.model_type][1].from_pretrained(args.model_dir,
-                                                                  args=args,
-                                                                  intent_label_lst=get_intent_labels(args),
-                                                                  slot_label_lst=get_slot_labels(args))
+        model = JointDeBERTa.from_pretrained(args.model_dir,
+                                             args=args,
+                                             intent_label_lst=get_intent_labels(args),
+                                             slot_label_lst=get_slot_labels(args))
         model.to(device)
         model.eval()
         logger.info("***** Model Loaded *****")
@@ -51,7 +52,6 @@ def read_input_file(pred_config):
 
 
 def convert_input_file_to_tensor_dataset(lines,
-                                         pred_config,
                                          args,
                                          tokenizer,
                                          pad_token_label_id,
@@ -139,7 +139,7 @@ def predict(pred_config):
     pad_token_label_id = args.ignore_index
     tokenizer = load_tokenizer(args)
     lines = read_input_file(pred_config)
-    dataset = convert_input_file_to_tensor_dataset(lines, pred_config, args, tokenizer, pad_token_label_id)
+    dataset = convert_input_file_to_tensor_dataset(lines, args, tokenizer, pad_token_label_id)
 
     # Predict
     sampler = SequentialSampler(dataset)
@@ -152,12 +152,8 @@ def predict(pred_config):
     for batch in tqdm(data_loader, desc="Predicting"):
         batch = tuple(t.to(device) for t in batch)
         with torch.no_grad():
-            inputs = {"input_ids": batch[0],
-                      "attention_mask": batch[1],
-                      "intent_label_ids": None,
-                      "slot_labels_ids": None}
-            if args.model_type != "distilbert":
-                inputs["token_type_ids"] = batch[2]
+            inputs = {"input_ids": batch[0], "attention_mask": batch[1], "intent_label_ids": None,
+                      "slot_labels_ids": None, "token_type_ids": batch[2]}
             outputs = model(**inputs)
             _, (intent_logits, slot_logits) = outputs[:2]
 

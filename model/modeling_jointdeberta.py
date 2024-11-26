@@ -2,6 +2,7 @@ import torch.nn as nn
 from torchcrf import CRF
 from transformers import DebertaV2Model, DebertaV2PreTrainedModel
 
+from utils import MODEL_PATH
 from .module import IntentClassifier, SlotClassifier
 
 
@@ -11,7 +12,7 @@ class JointDeBERTa(DebertaV2PreTrainedModel):
         self.args = args
         self.num_intent_labels = len(intent_label_lst)
         self.num_slot_labels = len(slot_label_lst)
-        self.deberta = DebertaV2Model.from_pretrained(args.model_name_or_path)
+        self.deberta = DebertaV2Model.from_pretrained(MODEL_PATH)
 
         self.intent_classifier = IntentClassifier(config.hidden_size, self.num_intent_labels, args.dropout_rate)
         self.slot_classifier = SlotClassifier(config.hidden_size, self.num_slot_labels, args.dropout_rate)

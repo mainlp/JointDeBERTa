@@ -207,10 +207,9 @@ def load_and_cache_examples(args, tokenizer, mode):
     # Load data features from cache or dataset file
     cached_features_file = os.path.join(
         args.data_dir,
-        'cached_{}_{}_{}_{}'.format(
+        'cached_{}_{}_{}'.format(
             mode,
             args.task,
-            list(filter(None, args.model_name_or_path.split("/"))).pop(),
             args.max_seq_len
         )
     )
