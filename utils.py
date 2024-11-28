@@ -59,7 +59,6 @@ def compute_metrics(intent_preds, intent_labels, slot_preds, slot_labels):
 
 def get_slot_metrics(preds, labels):
     assert len(preds) == len(labels)
-    # TODO exclude pad tokens
     return {
         "slot_precision": precision_score(labels, preds),
         "slot_recall": recall_score(labels, preds),

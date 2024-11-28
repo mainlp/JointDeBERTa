@@ -59,7 +59,7 @@ if __name__ == '__main__':
     parser.add_argument("--eval_dir", help="Directory with evaluation data")
     parser.add_argument("--test_dir", help="Directory with test data, used with do_eval")
 
-    parser.add_argument("--ignore_index", default=0, type=int,
+    parser.add_argument("--ignore_index", default=-100, type=int,
                         help='Specifies a target value that is ignored and does not contribute to the input gradient')
 
     parser.add_argument('--slot_loss_coef', type=float, default=1.0, help='Coefficient for the slot loss.')

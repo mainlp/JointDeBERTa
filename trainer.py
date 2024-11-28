@@ -100,6 +100,8 @@ class Trainer(object):
                     epoch_iterator.close()
                     break
 
+            logger.info(f"***** Epoch {epoch} done *****")
+            self.evaluate(dev_dataset, self.args.eval_dir)
             if 0 < self.args.max_steps < global_step:
                 train_iterator.close()
                 break
