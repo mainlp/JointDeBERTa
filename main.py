@@ -32,6 +32,7 @@ if __name__ == '__main__':
     parser.add_argument("--data_dir", default="./data", type=str, help="The input data dir")
     parser.add_argument("--intent_label_file", default="intent_label.txt", type=str, help="Intent Label file")
     parser.add_argument("--slot_label_file", default="slot_label.txt", type=str, help="Slot Label file")
+    parser.add_argument("--checkpoint", default=-1, type=str, help="Checkpoint to load, -1 or unset to load the latest checkpoint")
 
     parser.add_argument('--seed', type=int, default=1234, help="random seed for initialization")
     parser.add_argument("--train_batch_size", default=32, type=int, help="Batch size for training.")
@@ -49,7 +50,6 @@ if __name__ == '__main__':
     parser.add_argument("--dropout_rate", default=0.1, type=float, help="Dropout for fully-connected layers")
 
     parser.add_argument('--logging_steps', type=int, default=200, help="Log every X updates steps.")
-    parser.add_argument('--save_steps', type=int, default=200, help="Save checkpoint every X updates steps.")
 
     parser.add_argument("--do_train", action="store_true", help="Whether to run training.")
     parser.add_argument("--do_eval", action="store_true", help="Whether to run eval on the test set.")

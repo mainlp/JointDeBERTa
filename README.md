@@ -3,6 +3,16 @@ Fork of <br>
 (Unofficial) Pytorch implementation of `JointBERT`: [BERT for Joint Intent Classification and Slot Filling](https://arxiv.org/abs/1902.10909)<br> 
 adapted for mDeBERTa and updated to Pytorch 2.
 
+
+## Changelog
+- Updated libraries and fixed resulting warnings and errors
+- Adapted to mDeBERTa and got rid of other model architectures
+- Modified model saving logic:
+  - no longer allow for save steps
+  - no long overwrite models
+  - save every epoch
+  - save training arguments only once
+
 ## Model Architecture
 
 <p float="left" align="center">

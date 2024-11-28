@@ -1,3 +1,4 @@
+import glob
 import os
 import random
 import logging
@@ -10,6 +11,11 @@ from transformers import AutoTokenizer
 
 MODEL_PATH = 'microsoft/mdeberta-v3-base'
 logger = logging.getLogger(__name__)
+
+def get_latest_ckpt(model_dir):
+    checkpoints = glob.glob(f'{model_dir}/checkpoint-*')
+    return max(checkpoints, key=os.path.getctime)
+
 
 def get_intent_labels(args):
     return [label.strip() for label in open(os.path.join(args.data_dir, args.task, args.intent_label_file), 'r', encoding='utf-8')]
@@ -42,17 +48,18 @@ def compute_metrics(intent_preds, intent_labels, slot_preds, slot_labels):
     results = {}
     intent_result = get_intent_acc(intent_preds, intent_labels)
     slot_result = get_slot_metrics(slot_preds, slot_labels)
-    sementic_result = get_sentence_frame_acc(intent_preds, intent_labels, slot_preds, slot_labels)
+    semantic_result = get_sentence_frame_acc(intent_preds, intent_labels, slot_preds, slot_labels)
 
     results.update(intent_result)
     results.update(slot_result)
-    results.update(sementic_result)
+    results.update(semantic_result)
 
     return results
 
 
 def get_slot_metrics(preds, labels):
     assert len(preds) == len(labels)
+    # TODO exclude pad tokens
     return {
         "slot_precision": precision_score(labels, preds),
         "slot_recall": recall_score(labels, preds),
