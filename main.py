@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from trainer import Trainer
 from utils import init_logger, load_tokenizer, set_seed
@@ -10,18 +11,17 @@ def main(args):
     set_seed(args)
     tokenizer = load_tokenizer(args)
 
-    train_dataset = load_and_cache_examples(args, tokenizer, mode="train")
-    dev_dataset = load_and_cache_examples(args, tokenizer, mode="dev")
-    test_dataset = load_and_cache_examples(args, tokenizer, mode="test")
-
-    trainer = Trainer(args, train_dataset, dev_dataset, test_dataset)
+    trainer = Trainer(args)
 
     if args.do_train:
-        trainer.train()
+        train_dataset = load_and_cache_examples(args, tokenizer, args.train_dir)
+        dev_dataset = load_and_cache_examples(args, tokenizer, args.eval_dir)
+        trainer.train(train_dataset, dev_dataset)
 
     if args.do_eval:
+        test_dataset = load_and_cache_examples(args, tokenizer, args.test_dir)
         trainer.load_model()
-        trainer.evaluate("test")
+        trainer.evaluate(test_dataset, args.test_dir)
 
 
 if __name__ == '__main__':
@@ -55,6 +55,10 @@ if __name__ == '__main__':
     parser.add_argument("--do_eval", action="store_true", help="Whether to run eval on the test set.")
     parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
 
+    parser.add_argument("--train_dir", help="Directory with training data")
+    parser.add_argument("--eval_dir", help="Directory with evaluation data")
+    parser.add_argument("--test_dir", help="Directory with test data, used with do_eval")
+
     parser.add_argument("--ignore_index", default=0, type=int,
                         help='Specifies a target value that is ignored and does not contribute to the input gradient')
 
@@ -65,4 +69,10 @@ if __name__ == '__main__':
     parser.add_argument("--slot_pad_label", default="PAD", type=str, help="Pad token for slot label pad (to be ignore when calculate loss)")
 
     args = parser.parse_args()
+    if not args.train_dir:
+        args.train_dir = os.path.join(args.data_dir, args.task, "train")
+    if not args.eval_dir:
+        args.eval_dir = os.path.join(args.data_dir, args.task, "dev")
+    if not args.test_dir:
+        args.test_dir = os.path.join(args.data_dir, args.task, "test")
     main(args)

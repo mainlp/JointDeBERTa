@@ -15,12 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 class Trainer(object):
-    def __init__(self, args, train_dataset=None, dev_dataset=None, test_dataset=None):
+    def __init__(self, args):
         self.args = args
-        self.train_dataset = train_dataset
-        self.dev_dataset = dev_dataset
-        self.test_dataset = test_dataset
-
         self.intent_label_lst = get_intent_labels(args)
         self.slot_label_lst = get_slot_labels(args)
         # Use cross entropy ignore index as padding label id so that only real label ids contribute to the loss later
@@ -36,9 +32,9 @@ class Trainer(object):
         self.device = "cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu"
         self.model.to(self.device)
 
-    def train(self):
-        train_sampler = RandomSampler(self.train_dataset)
-        train_dataloader = DataLoader(self.train_dataset, sampler=train_sampler, batch_size=self.args.train_batch_size)
+    def train(self, train_dataset, dev_dataset):
+        train_sampler = RandomSampler(train_dataset)
+        train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=self.args.train_batch_size)
 
         if self.args.max_steps > 0:
             t_total = self.args.max_steps
@@ -58,7 +54,7 @@ class Trainer(object):
 
         # Train!
         logger.info("***** Running training *****")
-        logger.info("  Num examples = %d", len(self.train_dataset))
+        logger.info("  Num examples = %d", len(train_dataset))
         logger.info("  Num epochs = %d", self.args.num_train_epochs)
         logger.info("  Total train batch size = %d", self.args.train_batch_size)
         logger.info("  Gradient accumulation steps = %d", self.args.gradient_accumulation_steps)
@@ -98,7 +94,7 @@ class Trainer(object):
                     global_step += 1
 
                     if self.args.logging_steps > 0 and global_step % self.args.logging_steps == 0:
-                        self.evaluate("dev")
+                        self.evaluate(dev_dataset, self.args.eval_dir)
 
                 if 0 < self.args.max_steps < global_step:
                     epoch_iterator.close()
@@ -110,19 +106,12 @@ class Trainer(object):
 
         return global_step, tr_loss / global_step
 
-    def evaluate(self, mode):
-        if mode == 'test':
-            dataset = self.test_dataset
-        elif mode == 'dev':
-            dataset = self.dev_dataset
-        else:
-            raise Exception("Only dev and test dataset available")
-
+    def evaluate(self, dataset, dataset_name):
         eval_sampler = SequentialSampler(dataset)
         eval_dataloader = DataLoader(dataset, sampler=eval_sampler, batch_size=self.args.eval_batch_size)
 
         # Eval!
-        logger.info("***** Running evaluation on %s dataset *****", mode)
+        logger.info("***** Running evaluation on %s *****", dataset_name)
         logger.info("  Num examples = %d", len(dataset))
         logger.info("  Batch size = %d", self.args.eval_batch_size)
         eval_loss = 0.0

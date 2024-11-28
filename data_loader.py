@@ -2,6 +2,7 @@ import os
 import copy
 import json
 import logging
+import re
 
 import torch
 from torch.utils.data import TensorDataset
@@ -77,43 +78,36 @@ class JointProcessor(object):
         self.slot_labels_file = 'seq.out'
 
     @classmethod
-    def _read_file(cls, input_file, quotechar=None):
+    def _read_file(cls, input_file):
         """Reads a tab separated value file."""
         with open(input_file, "r", encoding="utf-8") as f:
-            lines = []
-            for line in f:
-                lines.append(line.strip())
-            return lines
+            return [line.strip() for line in f]
 
-    def _create_examples(self, texts, intents, slots, set_type):
+    def _create_examples(self, texts, intents, slots, dataset_dir):
         """Creates examples for the training and dev sets."""
         examples = []
+        prefix = re.sub('/', '_', dataset_dir)
         for i, (text, intent, slot) in enumerate(zip(texts, intents, slots)):
-            guid = "%s-%s" % (set_type, i)
+            guid = "%s-%s" % (prefix, i)
             # 1. input_text
             words = text.split()  # Some are spaced twice
+            if len(text) == 0:
+                continue
             # 2. intent
             intent_label = self.intent_labels.index(intent) if intent in self.intent_labels else self.intent_labels.index("UNK")
             # 3. slot
-            slot_labels = []
-            for s in slot.split():
-                slot_labels.append(self.slot_labels.index(s) if s in self.slot_labels else self.slot_labels.index("UNK"))
-
+            slot_labels = [self.slot_labels.index(s) if s in self.slot_labels else self.slot_labels.index("UNK") for s in slot.split()]
             assert len(words) == len(slot_labels)
             examples.append(InputExample(guid=guid, words=words, intent_label=intent_label, slot_labels=slot_labels))
         return examples
 
-    def get_examples(self, mode):
-        """
-        Args:
-            mode: train, dev, test
-        """
-        data_path = os.path.join(self.args.data_dir, self.args.task, mode)
+    def get_examples(self, dataset_dir):
+        data_path = os.path.join(dataset_dir)
         logger.info("LOOKING AT {}".format(data_path))
         return self._create_examples(texts=self._read_file(os.path.join(data_path, self.input_text_file)),
                                      intents=self._read_file(os.path.join(data_path, self.intent_label_file)),
                                      slots=self._read_file(os.path.join(data_path, self.slot_labels_file)),
-                                     set_type=mode)
+                                     dataset_dir=dataset_dir)
 
 
 def convert_examples_to_features(examples, max_seq_len, tokenizer,
@@ -201,17 +195,12 @@ def convert_examples_to_features(examples, max_seq_len, tokenizer,
     return features
 
 
-def load_and_cache_examples(args, tokenizer, mode):
+def load_and_cache_examples(args, tokenizer, dataset_dir):
     processor = JointProcessor(args)
 
     # Load data features from cache or dataset file
     cached_features_file = os.path.join(
-        args.data_dir,
-        'cached_{}_{}_{}'.format(
-            mode,
-            args.task,
-            args.max_seq_len
-        )
+        f"{dataset_dir}/cached_mdeberta-v3_{args.max_seq_len}"
     )
 
     if os.path.exists(cached_features_file):
@@ -220,15 +209,7 @@ def load_and_cache_examples(args, tokenizer, mode):
     else:
         # Load data features from dataset file
         logger.info("Creating features from dataset file at %s", args.data_dir)
-        if mode == "train":
-            examples = processor.get_examples("train")
-        elif mode == "dev":
-            examples = processor.get_examples("dev")
-        elif mode == "test":
-            examples = processor.get_examples("test")
-        else:
-            raise Exception("For mode, Only train, dev, test is available")
-
+        examples = processor.get_examples(dataset_dir)
         # Use cross entropy ignore index as padding label id so that only real label ids contribute to the loss later
         pad_token_label_id = args.ignore_index
         features = convert_examples_to_features(examples, args.max_seq_len, tokenizer,
