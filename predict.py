@@ -104,6 +104,26 @@ def convert_input_file_to_tensor_dataset(lines,
     return dataset
 
 
+def write_to_file(pred_config, lines, slot_preds_list, intent_preds, intent_label_lst):
+    # Write to output file
+    with open(pred_config.output_file, "w", encoding="utf-8") as f:
+        if pred_config.conll:
+            for words, slot_preds, intent_pred in zip(lines, slot_preds_list, intent_preds):
+                f.write(f"# text = {' '.join(words)}\n")
+                f.write(f"# intent = {intent_label_lst[intent_pred]}\n")
+                for i, (word, pred) in enumerate(zip(words, slot_preds)):
+                    f.write(f"{i+1}\t{word}\t{pred}\n")
+                f.write("\n")
+        else:
+            for words, slot_preds, intent_pred in zip(lines, slot_preds_list, intent_preds):
+                line = ""
+                for word, pred in zip(words, slot_preds):
+                    if pred == 'O':
+                        line = line + word + " "
+                    else:
+                        line = line + "[{}:{}] ".format(word, pred)
+                f.write("<{}> -> {}\n".format(intent_label_lst[intent_pred], line.strip()))
+
 def predict(pred_config):
     # load model and args
     args = get_args(pred_config)
@@ -171,16 +191,7 @@ def predict(pred_config):
                 slot_preds_list[i].append(slot_label_map[slot_preds[i][j]])
 
     # Write to output file
-    with open(pred_config.output_file, "w", encoding="utf-8") as f:
-        for words, slot_preds, intent_pred in zip(lines, slot_preds_list, intent_preds):
-            line = ""
-            for word, pred in zip(words, slot_preds):
-                if pred == 'O':
-                    line = line + word + " "
-                else:
-                    line = line + "[{}:{}] ".format(word, pred)
-            f.write("<{}> -> {}\n".format(intent_label_lst[intent_pred], line.strip()))
-
+    write_to_file(pred_config, lines, slot_preds_list, intent_preds, intent_label_lst)
     logger.info("Prediction Done!")
 
 
@@ -194,6 +205,6 @@ if __name__ == "__main__":
 
     parser.add_argument("--batch_size", default=32, type=int, help="Batch size for prediction")
     parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
-
+    parser.add_argument("--conll", action="store_true", help="Output conll format")
     pred_config = parser.parse_args()
     predict(pred_config)
