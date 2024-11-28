@@ -1,16 +1,12 @@
 import os
 import logging
 import argparse
-from pathlib import Path
-
-from tqdm import tqdm
-
-import numpy as np
 import torch
+import numpy as np
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
-
-from model.modeling_jointdeberta import load_model
 from utils import init_logger, load_tokenizer, get_intent_labels, get_slot_labels
+from tqdm import tqdm
+from model import JointDeBERTa
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +108,7 @@ def predict(pred_config):
     # load model and args
     args = get_args(pred_config)
     device = get_device(pred_config)
-    model = load_model(args.model_dir, args, device)
+    model = JointDeBERTa.load_model(args.model_dir, args, device)
     logger.info(args)
 
     intent_label_lst = get_intent_labels(args)

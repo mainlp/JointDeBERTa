@@ -9,7 +9,6 @@ from torch.optim import AdamW
 from transformers import get_linear_schedule_with_warmup, AutoConfig
 
 from model import JointDeBERTa
-from model.modeling_jointdeberta import load_model
 from utils import compute_metrics, get_intent_labels, get_slot_labels, MODEL_PATH
 
 logger = logging.getLogger(__name__)
@@ -219,9 +218,9 @@ class Trainer(object):
         logger.info("Saving training args to %s", self.args.model_dir)
 
     def load_model(self, checkpoint=-1):
-        self.model = load_model(self.args.model_dir,
-                                self.args,
-                                self.device,
-                                checkpoint,
-                                slot_labels=self.slot_label_lst,
-                                intent_labels=self.intent_label_lst)
+        self.model = JointDeBERTa.load_model(self.args.model_dir,
+                                             self.args,
+                                             self.device,
+                                             checkpoint,
+                                             slot_labels=self.slot_label_lst,
+                                             intent_labels=self.intent_label_lst)
