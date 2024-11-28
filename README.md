@@ -12,6 +12,8 @@ adapted for mDeBERTa and updated to Pytorch 2.
   - no long overwrite models
   - save every epoch
   - save training arguments only once
+- Modified data loading to allow for more flexible datasets (rather than only train, dev, and test),<br>
+  specified using flags (`--train_dir`, `--test_dir`, `--eval_dir`)
 
 ## Model Architecture
 
