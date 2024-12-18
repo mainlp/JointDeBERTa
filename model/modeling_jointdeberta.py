@@ -25,15 +25,15 @@ class JointDeBERTa(DebertaV2PreTrainedModel):
             self.crf = CRF(num_tags=self.num_slot_labels, batch_first=True)
 
     @classmethod
-    def load_model(cls, model_dir, args, device, checkpoint=-1, intent_labels=None, slot_labels=None):
+    def load_model(cls, model_dir, args, device, intent_labels=None, slot_labels=None):
         # Check whether model exists
         if not os.path.exists(model_dir):
             raise Exception("Model doesn't exist! Train first!")
 
-        if checkpoint == -1:
+        if args.checkpoint == -1:
             model_file = get_latest_ckpt(model_dir)
         else:
-            model_file = f"{model_dir}/checkpoint-{checkpoint}"
+            model_file = f"{model_dir}/checkpoint-{args.checkpoint}"
 
         logger.info(f"Loading model from {model_file}")
         try:

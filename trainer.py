@@ -208,10 +208,9 @@ class Trainer(object):
         torch.save(self.args, os.path.join(self.args.model_dir, 'training_args.bin'))
         logger.info("Saving training args to %s", self.args.model_dir)
 
-    def load_model(self, checkpoint=-1):
+    def load_model(self):
         self.model = JointDeBERTa.load_model(self.args.model_dir,
                                              self.args,
                                              self.device,
-                                             checkpoint,
                                              slot_labels=self.slot_label_lst,
                                              intent_labels=self.intent_label_lst)
