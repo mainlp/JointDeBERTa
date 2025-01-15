@@ -13,8 +13,13 @@ MODEL_PATH = 'microsoft/mdeberta-v3-base'
 logger = logging.getLogger(__name__)
 
 def get_latest_ckpt(model_dir):
-    checkpoints = glob.glob(f'{model_dir}/checkpoint-*')
-    return max(checkpoints, key=os.path.getctime)
+    if os.path.isdir(model_dir):
+        checkpoints = glob.glob(f'{model_dir}/checkpoint-*')
+        if len(checkpoints) == 0:
+            # most likely this is a swapped or reverted model
+            return model_dir
+        return max(checkpoints, key=os.path.getctime)
+    return model_dir
 
 
 def get_intent_labels(args):
@@ -25,7 +30,7 @@ def get_slot_labels(args):
     return [label.strip() for label in open(os.path.join(args.data_dir, args.task, args.slot_label_file), 'r', encoding='utf-8')]
 
 
-def load_tokenizer(args):
+def load_tokenizer():
     return AutoTokenizer.from_pretrained(MODEL_PATH)
 
 

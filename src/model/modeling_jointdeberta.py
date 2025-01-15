@@ -1,12 +1,13 @@
 import logging
 import os
 
+import torch
 import torch.nn as nn
 from torchcrf import CRF
 from transformers import DebertaV2Model, DebertaV2PreTrainedModel
 
 from utils import MODEL_PATH, get_intent_labels, get_slot_labels, get_latest_ckpt
-from .module import IntentClassifier, SlotClassifier
+from model.module import IntentClassifier, SlotClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class JointDeBERTa(DebertaV2PreTrainedModel):
         if not os.path.exists(model_dir):
             raise Exception("Model doesn't exist! Train first!")
 
-        if args.checkpoint == -1:
+        if not hasattr(args, "checkpoint") or args.checkpoint == -1:
             model_file = get_latest_ckpt(model_dir)
         else:
             model_file = f"{model_dir}/checkpoint-{args.checkpoint}"
@@ -46,11 +47,14 @@ class JointDeBERTa(DebertaV2PreTrainedModel):
                                                  intent_label_lst=intent_labels,
                                                  slot_label_lst=slot_labels)
             model.to(device)
-            model.eval()
             logger.info("***** Model Loaded *****")
         except:
-            raise Exception("Some model files might be missing...")
-
+            try:
+                # mainly for backwards compatibility
+                model = torch.load(model_file, map_location=device)
+            except:
+                raise Exception("Some model files might be missing...")
+        model.eval()
         return model
 
     def forward(self, input_ids, attention_mask, token_type_ids, intent_label_ids, slot_labels_ids):

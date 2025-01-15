@@ -9,7 +9,7 @@ from data_loader import load_and_cache_examples
 def main(args):
     init_logger()
     set_seed(args)
-    tokenizer = load_tokenizer(args)
+    tokenizer = load_tokenizer()
 
     trainer = Trainer(args)
 

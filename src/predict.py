@@ -16,7 +16,12 @@ def get_device(pred_config):
 
 
 def get_args(pred_config):
-    return torch.load(os.path.join(pred_config.model_dir, 'training_args.bin'))
+    training_args_path = os.path.join(pred_config.model_dir, 'training_args.bin')
+    if not os.path.exists(training_args_path):
+        training_args_path = os.path.join(os.path.dirname(pred_config.model_dir), 'training_args.bin')
+    if not os.path.exists(training_args_path):
+        raise ValueError(f"training_args.bin not found in model directory {pred_config.model_dir} or its parent")
+    return torch.load(training_args_path)
 
 
 def read_input_file(pred_config):
